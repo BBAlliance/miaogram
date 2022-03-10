@@ -4,7 +4,7 @@ from pyrogram.types import Message
 
 import time
 
-@onCommand("!dme")
+@onCommand("!sdme")
 async def handler(args: Args, client: Client, message: Message):
     counter = 0
     limit = args.getInt(0)
@@ -14,8 +14,8 @@ async def handler(args: Args, client: Client, message: Message):
 
     wait_deletions = []
     t = time.time()
-    async for message in client.iter_history(message.chat.id, limit=10000):
-        if message.from_user and message.from_user.is_self:
+    async for message in client.search_messages(message.chat.id, from_user="me"):
+        if message.message_id > 1 and message.from_user and message.from_user.is_self:
             if message.text and message.text != placeholder:
                 try:
                     await message.edit(placeholder)
@@ -36,7 +36,7 @@ async def handler(args: Args, client: Client, message: Message):
         i += factor
     
     t = int(time.time() - t)
-    m = await message.reply(f"已成功删除 ({counter-1}/10000) 条消息 用时 {t} 秒 ~")
+    m = await message.reply(f"已成功搜索并删除 {counter-1} 条消息 用时 {t} 秒 ~")
 
     time.sleep(3)
     await m.delete()

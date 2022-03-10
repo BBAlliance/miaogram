@@ -29,7 +29,7 @@ def onCommand(command="", filters=None) -> callable:
             if message.from_user.is_self and message.text:
                 payloads = message.text.strip().split()
                 if len(payloads) > 0 and payloads[0] == command:
-                    logger.info(f"Calling plugin: {command} with={message.text}")
+                    logger.info(f"Calling plugin: {command} with={payloads[1:]}")
                     args = Args(payloads[1:])
                     await func(args, client, message)
         
