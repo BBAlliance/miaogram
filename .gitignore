@@ -1,0 +1,6 @@
+# ignore files
+
+__pycache__
+._DS_Store
+.DS_Store
+*.session
