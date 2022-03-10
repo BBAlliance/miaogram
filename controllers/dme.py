@@ -2,12 +2,10 @@ from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-from utils import utils
-
 import time
 
 @onCommand("/!dme")
-async def handler(args: Args, client: Client, message: Message):
+async def dme(args: Args, client: Client, message: Message):
     counter = 0
     limit = args.getInt(0)
     if limit > 1000 or limit <= 0:
@@ -37,7 +35,7 @@ async def handler(args: Args, client: Client, message: Message):
         i += factor
     
     t = int(time.time() - t)
-    m = await message.reply(f"已成功删除 {counter} 条消息 用时 {t} 秒 ~")
+    m = await message.reply(f"已成功删除 {counter-1} 条消息 用时 {t} 秒 ~")
 
     time.sleep(3)
     await m.delete()
