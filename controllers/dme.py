@@ -14,7 +14,7 @@ async def handler(args: Args, client: Client, message: Message):
 
     wait_deletions = []
     t = time.time()
-    async for message in client.iter_history(message.chat.id, limit=1000):
+    async for message in client.iter_history(message.chat.id, limit=10000):
         if message.from_user and message.from_user.is_self:
             if message.text and message.text != placeholder:
                 try:
