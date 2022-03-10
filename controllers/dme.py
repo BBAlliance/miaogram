@@ -4,20 +4,21 @@ from pyrogram.types import Message
 
 import time
 
-@onCommand("/!dme")
-async def dme(args: Args, client: Client, message: Message):
+@onCommand("!dme")
+async def handler(args: Args, client: Client, message: Message):
     counter = 0
     limit = args.getInt(0)
     if limit > 1000 or limit <= 0:
         limit = 1000
+    placeholder = "—— auto deletion ——"
 
     wait_deletions = []
     t = time.time()
-    async for message in client.iter_history(message.chat.id):
-        if message.from_user.is_self:
-            if message.text:
+    async for message in client.iter_history(message.chat.id, limit=1000):
+        if message.from_user and message.from_user.is_self:
+            if message.text and message.text != placeholder:
                 try:
-                    await message.edit("—— auto deletion ——")
+                    await message.edit(placeholder)
                     time.sleep(0.001)
                 except Exception:
                     pass

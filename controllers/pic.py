@@ -5,8 +5,8 @@ from os import path
 from utils import utils
 from PIL import Image
 
-@onCommand("/!pic")
-async def pic(_: Args, client: Client, message: Message):
+@onCommand("!pic")
+async def handler(_: Args, client: Client, message: Message):
     re = message.reply_to_message
     
     if not re:

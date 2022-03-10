@@ -3,7 +3,7 @@ from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("/!ping")
+@onCommand("!ping")
 async def handler(_: Args, client: Client, message: Message):
     t = time.time()
     await message.edit("> Pong!")
