@@ -2,13 +2,16 @@ from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-import requests
+import aiohttp
 
-@onCommand("!dme")
+proxy = {}
+s = aiohttp.ClientSession()
+
+@onCommand("!diss")
 async def handler(args: Args, client: Client, msg: Message):
     m = await msg.edit_text('獲取中...')
     try:
-        r = await requests.get("https://zuan.shabi.workers.dev")
+        r = await s.get("https://zuan.shabi.workers.dev")
         if (r.status / 200) == 1:
             text = f'**{await r.text()}**'
             
