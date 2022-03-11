@@ -11,10 +11,12 @@ async def handler(args: Args, client: Client, msg: Message):
         r = await requests.get("https://zuan.shabi.workers.dev")
         if (r.status / 200) == 1:
             text = f'**{await r.text()}**'
+            
             if msg.reply_to_message:
+                text += f' [@{msg.reply_to_message.from_user.first_name}](tg://user?id={msg.reply_to_message.from_user.id})'
                 await client.send_message(msg.chat.id, text, 'MD', reply_to_message_id=msg.reply_to_message.message_id)
             else:
-                await msg.reply_text(text, False, 'MD')
+                await client.send_message(msg.chat.id, text, 'MD')
     except:
         return await client.send_message(msg.chat.id, '失敗', 'MD', disable_web_page_preview=True)
       
