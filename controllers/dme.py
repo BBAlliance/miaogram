@@ -1,7 +1,7 @@
 from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
-import sleep
+import time
 import asyncio
 
 @onCommand("!dme")
@@ -19,7 +19,7 @@ async def handler(args: Args, client: Client, message: Message):
             if message.text and message.text != placeholder:
                 try:
                     await message.edit(placeholder)
-                    await asyncio.sleep(0.001))
+                    await asyncio.sleep(0.001)
                 except Exception:
                     pass
             wait_deletions.append(message.message_id)
@@ -38,5 +38,5 @@ async def handler(args: Args, client: Client, message: Message):
     t = int(time.time() - t)
     m = await message.reply(f"已成功删除 ({counter-1}/10000) 条消息 用时 {t} 秒 ~")
 
-    time.sleep(3)
+    await asyncio.sleep(3)
     await m.delete()
