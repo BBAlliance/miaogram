@@ -2,7 +2,7 @@ from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-import time
+import asyncio
 
 @onCommand("!dme")
 async def handler(args: Args, client: Client, message: Message):
@@ -19,7 +19,7 @@ async def handler(args: Args, client: Client, message: Message):
             if message.text and message.text != placeholder:
                 try:
                     await message.edit(placeholder)
-                    time.sleep(0.001)
+                    await asyncio.sleep(0.001))
                 except Exception:
                     pass
             wait_deletions.append(message.message_id)
