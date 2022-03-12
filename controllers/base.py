@@ -31,7 +31,10 @@ def onCommand(command="", filters=None) -> callable:
                 if len(payloads) > 0 and payloads[0] == command:
                     logger.info(f"Calling plugin: {command} with={payloads[1:]}")
                     args = Args(payloads[1:])
-                    await func(args, client, message)
+                    try:
+                        await func(args, client, message)
+                    except Exception as e:
+                        logger.error(f"Unexpected Error: {e}")
         
         App.add_handler(MessageHandler(caller, filters), groupNum)
         groupNum += 1
