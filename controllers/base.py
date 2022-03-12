@@ -40,3 +40,17 @@ def onCommand(command="", filters=None) -> callable:
         groupNum += 1
         return caller
     return decorator
+
+def onMessage(filters=None) -> callable:
+    def decorator(func: Callable) -> Callable:
+        global groupNum
+        async def caller(client: Client, message: Message):
+            try:
+                await func(client, message)
+            except Exception as e:
+                logger.error(f"Unexpected Error: {e}")
+        
+        App.add_handler(MessageHandler(caller, filters), groupNum)
+        groupNum += 1
+        return caller
+    return decorator
