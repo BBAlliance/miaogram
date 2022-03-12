@@ -26,8 +26,8 @@ async def msgHandler(client: Client, msg: Message):
                 text = f'**{await r.text()}**'
                 
                 if msg.reply_to_message and msg.reply_to_message.from_user and msg.reply_to_message.from_user.is_self:
-                    text = f'[@{msg.reply_to_message.from_user.first_name}](tg://user?id={msg.reply_to_message.from_user.id}) ' + text
-                    await client.send_message(msg.chat.id, text, 'MD', reply_to_message_id=msg.reply_to_message.message_id)
+                    text = f'[@{msg.from_user.first_name}](tg://user?id={msg.from_user.id}) ' + text
+                    await msg.reply_text(text)
                 else:
                     await client.send_message(msg.chat.id, text, 'MD')
         except:
