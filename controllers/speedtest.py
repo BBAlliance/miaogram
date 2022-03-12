@@ -5,7 +5,7 @@ from pyrogram.types import Message
 from requests import get
 from PIL import Image
 from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitFailure
-from utils.utils import convertBytes
+from utils.utils import convertBytes, threadingExec
 
 @onCommand("!speedtest")
 async def handler(args: Args, client: Client, msg: Message):
@@ -27,9 +27,9 @@ async def handler(args: Args, client: Client, msg: Message):
     # 开始测速
     try:
         await msg.edit("下行测速中...")
-        test.download()
+        await threadingExec(test.download)
         await msg.edit("上行测速中...")
-        test.upload()
+        await threadingExec(test.upload)
         await msg.edit("生成图片中...")
         test.results.share()
     except (ShareResultsConnectFailure, ShareResultsSubmitFailure, RuntimeError) as e:
