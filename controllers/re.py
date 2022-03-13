@@ -19,4 +19,7 @@ async def handler(args: Args, client: Client, message: Message):
             if canForward:
                 await reply.forward(message.chat.id)
             else:
-                await reply.copy(message.chat.id)
+                if message.reply_to_top_message_id and message.reply_to_top_message_id != reply.message_id:
+                    await reply.copy(message.chat.id, reply_to_message_id=message.reply_to_top_message_id)
+                else:
+                    await reply.copy(message.chat.id)
