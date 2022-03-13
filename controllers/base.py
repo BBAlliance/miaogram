@@ -26,7 +26,7 @@ def onCommand(command="", filters=None) -> callable:
     def decorator(func: Callable) -> Callable:
         global groupNum
         async def caller(client: Client, message: Message):
-            if message.from_user.is_self and message.text:
+            if message and message.from_user and message.from_user.is_self and message.text:
                 payloads = message.text.strip().split()
                 if len(payloads) > 0 and payloads[0] == command:
                     logger.info(f"Calling plugin: {command} with={payloads[1:]}")
