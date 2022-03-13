@@ -1,4 +1,5 @@
 import time
+import json
 from .base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
@@ -11,7 +12,11 @@ async def handler(args: Args, client: Client, message: Message):
     
     await message.delete()
 
-    if message.reply_to_message:
+    reply = message.reply_to_message
+    if reply:
+        canForward = not reply.has_protected_content and not reply.chat.has_protected_content
         for _ in range(count):
-            await message.reply_to_message.forward(message.chat.id)
-
+            if canForward:
+                await reply.forward(message.chat.id)
+            else:
+                await reply.copy(message.chat.id)
