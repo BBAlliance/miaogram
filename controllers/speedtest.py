@@ -6,6 +6,7 @@ from requests import get
 from PIL import Image
 from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitFailure
 from utils.utils import convertBytes, threadingExec
+from utils import logger
 
 @onCommand("!speedtest")
 async def handler(args: Args, client: Client, msg: Message):
@@ -16,12 +17,24 @@ async def handler(args: Args, client: Client, msg: Message):
     try:
         appointed = args.getInt(0)
         if appointed > 0:
-            test.get_servers(servers=appointed)
+            test.get_servers(servers=[appointed])
         else:
             # test.get_best_server()
             test.get_closest_servers()
-    except:
+    except Exception as e:
+        logger.error(f"Speedtest Error: {str(e)}")
         await msg.edit("测速中断，无法获取测速服务器")
+        return
+    
+    if args.get(0) == "list":
+        srv = []
+        for distance in test.servers:
+            for server in test.servers[distance]:
+                cc = server["cc"]
+                sponsor = server["sponsor"]
+                id = "%5s" % (server["id"])
+                srv.append(f"- `{cc}` | `{id}` | `{sponsor}`")
+        await msg.edit("最近的服务器列表:\n\n" + "\n".join(srv), "md")
         return
     
     # 开始测速
@@ -56,7 +69,10 @@ async def handler(args: Args, client: Client, msg: Message):
             img = Image.open(BytesIO(data))
             img = img.crop((17, 11, 727, 389))
             img.save(buffer, format="PNG")
-            await client.send_photo(msg.chat.id, buffer, caption=des, parse_mode='md')
+            reply = None
+            if msg.reply_to_message:
+                reply = msg.reply_to_message_id
+            await client.send_photo(msg.chat.id, buffer, caption=des, parse_mode='md', reply_to_message_id=reply)
         # await client.send_photo(msg.chat.id, result['share'], caption=des, parse_mode='md')
     except:
         await msg.edit("测速中断，无法生成测速报告")
