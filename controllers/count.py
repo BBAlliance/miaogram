@@ -22,5 +22,5 @@ async def handler(args: Args, client: Client, message: Message):
     t = int((time.time() - t) * 1000)
     await message.edit(f"在当前群组中搜索到 {targetName} 发送的 {count} 条信息 用时 {t} 毫秒 ~")
 
-    await asyncio.sleep(3)
+    await asyncio.sleep(10)
     await message.delete()
