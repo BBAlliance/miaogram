@@ -1,6 +1,8 @@
-from utils import app
+from utils import app, config
 
 def main():
+    config.prepare()
+    config.migrate()
     client = app.initClient()
     import controllers
     client.run()

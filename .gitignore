@@ -5,4 +5,7 @@ __pycache__
 .DS_Store
 *.session
 *.session-journal
-downloads
+data
+*.spec
+build
+dist
