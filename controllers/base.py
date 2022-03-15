@@ -13,6 +13,9 @@ if app.App == None:
 App = app.App
 
 class Args(list):
+    def getAll(self) -> str:
+        return " ".join(self).strip()
+
     def get(self, index: int) -> Union[str, None]:
         if len(self) > index:
             return self[index]

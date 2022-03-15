@@ -77,3 +77,13 @@ def convertBytes(bits):
         bits /= power
         zero += 1
     return f"{round(bits, 2)} {units[zero]}"
+
+def getVendor(file):
+    fp = path.join(path.dirname(__file__), "../vendors", file)
+    content = ""
+    try:
+        with open(fp, "r") as f:
+            content = f.read()
+    except:
+        pass
+    return content
