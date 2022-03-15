@@ -1,4 +1,4 @@
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -7,7 +7,7 @@ import aiohttp
 proxy = {}
 s = aiohttp.ClientSession()
 
-@onCommand("!diss")
+@onCommand("diss", help="autodiss: 回复一个人来骂 TA")
 async def handler(args: Args, client: Client, msg: Message):
     m = await msg.edit_text('獲取中...')
     try:

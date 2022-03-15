@@ -1,5 +1,6 @@
 from asyncio import create_subprocess_shell, sleep
 from asyncio.subprocess import PIPE
+import json
 from os import path
 from threading import Thread
 
@@ -78,12 +79,29 @@ def convertBytes(bits):
         zero += 1
     return f"{round(bits, 2)} {units[zero]}"
 
-def getVendor(file):
-    fp = path.join(path.dirname(__file__), "../vendors", file)
+def getTextFile(file) -> str:
     content = ""
     try:
-        with open(fp, "r") as f:
+        with open(file, "r") as f:
             content = f.read()
     except:
         pass
     return content
+
+def getVendor(file):
+    return getTextFile(path.join(path.dirname(__file__), "../vendors", file))
+    
+def getDataFile(file):
+    return getTextFile(path.join(path.dirname(__file__), "../data", file))
+
+def getDataJSON(file):
+    try:
+        return json.loads(getDataFile(file))
+    except:
+        return {}
+
+def tryf(fn):
+    try:
+        return fn()
+    except:
+        pass

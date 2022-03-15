@@ -1,4 +1,4 @@
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -87,7 +87,7 @@ def search(query, language=None, num=None, start=0):
                     result['text'] = text
                     yield result
 
-@onCommand("!google")
+@onCommand("google", help="google: 你会用搜索吗")
 async def handler(args: Args, client: Client, msg: Message):
     text = args.getAll()
     if not text and msg.reply_to_message:

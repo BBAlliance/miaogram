@@ -1,7 +1,14 @@
 from os import path, mkdir, abort, rename
+
+from utils.utils import getDataJSON
 from .logger import error, info
 
-Config = {}
+DefaultConfig = {
+    "prefix": "!",
+    "plugins": [],
+}
+
+Config = {**DefaultConfig, **getDataJSON("config.json")}
 BaseDir = path.join(path.dirname(__file__), "..")
 DataDir = path.join(BaseDir, "data")
 

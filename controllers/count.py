@@ -6,7 +6,7 @@ from pyrogram.methods.messages.search_messages import get_chunk
 import time
 import asyncio
 
-@onCommand("!count")
+@onCommand("count", help="count: 获取一个人发言数量")
 async def handler(args: Args, client: Client, message: Message):
     await message.edit("读取中...")
     t = time.time()

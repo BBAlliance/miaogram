@@ -1,5 +1,5 @@
 from utils.utils import getVendor
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 import aiohttp 
@@ -29,7 +29,7 @@ async def getCosplay():
             continue
     return None
 
-@onCommand("!xjj")
+@onCommand("xjj", help="xjj: 来一张小姐姐")
 async def handler(args: Args, client: Client, msg: Message):
     await msg.edit("获取中...")
     img = await getCosplay()

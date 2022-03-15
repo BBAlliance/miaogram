@@ -8,7 +8,7 @@ from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitF
 from utils.utils import convertBytes, threadingExec
 from utils import logger
 
-@onCommand("!speedtest")
+@onCommand("speedtest", help="speedtest <id|list?>: 服务器测速")
 async def handler(args: Args, client: Client, msg: Message):
     test = Speedtest()
     await msg.edit("获取伺服器中...")

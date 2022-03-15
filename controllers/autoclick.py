@@ -23,7 +23,7 @@ async def msgHandler(client: Client, msg: Message):
     except:
         pass
 
-@onCommand("!autoclick")
+@onCommand("autoclick", help="autoclick <btnName>: 自动按按钮")
 async def handler(args: Args, client: Client, msg: Message):
     global toggler
     pattern = args.get(0)
