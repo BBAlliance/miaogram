@@ -2,7 +2,6 @@ from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-import cchardet
 import requests
 from pyquery import PyQuery
 from urllib.parse import quote_plus, urlparse, parse_qs
@@ -57,8 +56,7 @@ def search_page(query, language=None, num=None, start=0):
         if r.status_code != 200:
             return None
         content = r.content
-        charset = cchardet.detect(content)
-        text = content.decode(charset['encoding'])
+        text = content.decode('utf-8')
         return text
     except:
         return None
@@ -103,11 +101,11 @@ async def handler(args: Args, client: Client, msg: Message):
     results = ""
     for i in search(query=text, language='zh', num=int(10)):
         try:
-            title = i['text'][0:30] + '...'
+            title = i['text'][0:18].replace("`", "'") + '...'
             link = i['url']
-            results += f"\n[{title}]({link}) \n"
+            results += f"\n`{title}` | [详情]({link}) \n"
         except:
             await msg.edit("无法获取到有效信息...")
             return
 
-    await msg.edit(f"**Google** |`{text}`| 🔍 \n{results}", "md", disable_web_page_preview=True)
+    await msg.edit(f"**Google** | `{text}` | 🔍 \n{results}", reply_markup="md", disable_web_page_preview=True)
