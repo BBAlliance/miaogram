@@ -2,16 +2,21 @@ from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-import requests
 from pyquery import PyQuery
 from urllib.parse import quote_plus, urlparse, parse_qs
 from utils.logger import error
 
+import aiohttp
+
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
-COOKIE = 'CONSENT=YES+srp.gws-20220309-0-RC1.nl+FX+221; 1P_JAR=2022-03-16-05; DV=o4pAwEwV6rUhoLzqnEwKQNDxvykS-VegFLPp11GAngMAAAA'
-ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
-ACCEPTENCODING = 'gzip, deflate, br'
-ACCEPTLANG = 'en-US,en;q=0.9'
+COOKIES = {
+    'CONSENT': 'YES+srp.gws-20220309-0-RC1.nl+FX+221',
+    '1P_JAR': '2022-03-16-20',
+    'DV': 'o4pAwEwV6rVBECjFbPp1FKDX1hFI-ZfyqnMyKQBBhwAAAMD4RF76uFSRDlYgAMzHDXoVCf4-sxUIAA',
+}
+HEADERS = {'user-agent': USER_AGENT}
+
+s = aiohttp.ClientSession(cookies=COOKIES, headers=HEADERS)
 
 DOMAIN = 'www.google.com'
 URL_SEARCH = "https://{domain}/search?hl={language}&q={query}&btnG=Search&gbv=1"
@@ -31,7 +36,7 @@ def filter_link(link):
     except:
         return None
 
-def search_page(query, language=None, num=None, start=0):
+async def search_page(query, language=None, num=None, start=0):
     domain = DOMAIN
     if start > 0:
         url = URL_NEXT
@@ -48,26 +53,17 @@ def search_page(query, language=None, num=None, start=0):
                 domain=domain, language=language, query=quote_plus(query), num=num)
     if language is None:
         url = url.replace('hl=None&', '')
-    # Add headers
-    headers = {'user-agent': USER_AGENT, 'cookie': COOKIE, 'accept': ACCEPT, 'accept-encoding': ACCEPTENCODING, 'accept-language': ACCEPTLANG, 'dnt': '1', 'preferanonymous': '1'}
     try:
-        requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
-        r = requests.get(url=url,
-                            headers=headers,
-                            allow_redirects=False,
-                            verify=False,
-                            timeout=30)
-        if r.status_code != 200:
+        r = await s.get(url, allow_redirects=False)
+        if r.status != 200:
             error(f"Google Search Error | url: {url} redirecting: {r.headers.get('location')}")
             return None
-        content = r.content
-        text = content.decode('utf-8')
-        return text
+        return await r.text('utf-8')
     except:
         return None
 
-def search(query, language=None, num=None, start=0):
-    content = search_page(query, language, num, start)
+async def search(query, language=None, num=None, start=0):
+    content = await search_page(query, language, num, start)
     if not content:
         return
     
@@ -104,7 +100,7 @@ async def handler(args: Args, client: Client, msg: Message):
     await msg.edit('🔍 搜索中...')
 
     results = ""
-    for i in search(query=text, language='zh', num=int(10)):
+    async for i in search(query=text, language='zh', num=int(10)):
         try:
             title = i['text'][0:18].replace("`", "'") + '...'
             link = i['url']

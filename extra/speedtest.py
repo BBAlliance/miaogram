@@ -2,11 +2,13 @@ from io import BytesIO
 from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
-from requests import get
 from PIL import Image
 from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitFailure
 from utils.utils import convertBytes, threadingExec
 from utils import logger
+
+import aiohttp 
+s = aiohttp.ClientSession()
 
 @onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速")
 async def handler(args: Args, client: Client, msg: Message):
@@ -64,9 +66,10 @@ async def handler(args: Args, client: Client, msg: Message):
         )
 
         # 处理图片
-        data = get(result['share']).content
+        data = await s.get(result['share'])
+        content = await data.read()
         with BytesIO() as buffer:
-            img = Image.open(BytesIO(data))
+            img = Image.open(BytesIO(content))
             img = img.crop((17, 11, 727, 389))
             img.save(buffer, format="PNG")
             reply = None
