@@ -5,9 +5,13 @@ from pyrogram.types import Message
 import requests
 from pyquery import PyQuery
 from urllib.parse import quote_plus, urlparse, parse_qs
+from utils.logger import error
 
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36'
-COOKIE = 'Accept-Language: en" -b "YSC=BiCUU3-5Gdk; CONSENT=YES+cb.20220301-11-p0.en+FX+700; GPS=1; VISITOR_INFO1_LIVE=4VwPMkB7W5A; PREF=tz=Asia.Shanghai; _gcl_au=1.1.1809531354.1646633279'
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
+COOKIE = 'CONSENT=YES+srp.gws-20220309-0-RC1.nl+FX+221; 1P_JAR=2022-03-16-05; DV=o4pAwEwV6rUhoLzqnEwKQNDxvykS-VegFLPp11GAngMAAAA'
+ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+ACCEPTENCODING = 'gzip, deflate, br'
+ACCEPTLANG = 'en-US,en;q=0.9'
 
 DOMAIN = 'www.google.com'
 URL_SEARCH = "https://{domain}/search?hl={language}&q={query}&btnG=Search&gbv=1"
@@ -45,7 +49,7 @@ def search_page(query, language=None, num=None, start=0):
     if language is None:
         url = url.replace('hl=None&', '')
     # Add headers
-    headers = {'user-agent': USER_AGENT, 'cookie': COOKIE}
+    headers = {'user-agent': USER_AGENT, 'cookie': COOKIE, 'accept': ACCEPT, 'accept-encoding': ACCEPTENCODING, 'accept-language': ACCEPTLANG, 'dnt': '1', 'preferanonymous': '1'}
     try:
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
         r = requests.get(url=url,
@@ -54,6 +58,7 @@ def search_page(query, language=None, num=None, start=0):
                             verify=False,
                             timeout=30)
         if r.status_code != 200:
+            error(f"Google Search Error | url: {url} redirecting: {r.headers.get('location')}")
             return None
         content = r.content
         text = content.decode('utf-8')
@@ -64,7 +69,7 @@ def search_page(query, language=None, num=None, start=0):
 def search(query, language=None, num=None, start=0):
     content = search_page(query, language, num, start)
     if not content:
-        return None
+        return
     
     pq_content = PyQuery(content)
     for p in pq_content.items('a'):
@@ -108,4 +113,4 @@ async def handler(args: Args, client: Client, msg: Message):
             await msg.edit("无法获取到有效信息...")
             return
 
-    await msg.edit(f"**Google** | `{text}` | 🔍 \n{results}", reply_markup="md", disable_web_page_preview=True)
+    await msg.edit(f"**Google** | `{text}` | 🔍 \n{results}", "md", disable_web_page_preview=True)
