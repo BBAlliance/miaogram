@@ -1,9 +1,9 @@
 import time
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("ping", help="ping: 检查到 DC 的延迟")
+@onCommand("ping", minVer="1.0.0", help="ping: 检查到 DC 的延迟")
 async def handler(_: Args, client: Client, message: Message):
     t = time.time()
     await message.edit("> Pong!")

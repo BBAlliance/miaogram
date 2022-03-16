@@ -1,5 +1,5 @@
 from io import BytesIO
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 from requests import get
@@ -8,7 +8,7 @@ from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitF
 from utils.utils import convertBytes, threadingExec
 from utils import logger
 
-@onCommand("speedtest", help="speedtest <id|list?>: 服务器测速")
+@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速")
 async def handler(args: Args, client: Client, msg: Message):
     test = Speedtest()
     await msg.edit("获取伺服器中...")

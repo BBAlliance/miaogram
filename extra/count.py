@@ -1,12 +1,12 @@
 from typing import List, Union
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 from pyrogram.methods.messages.search_messages import get_chunk
 import time
 import asyncio
 
-@onCommand("count", help="count: 获取一个人发言数量")
+@onCommand("count", minVer="1.0.0", help="count: 获取一个人发言数量")
 async def handler(args: Args, client: Client, message: Message):
     await message.edit("读取中...")
     t = time.time()

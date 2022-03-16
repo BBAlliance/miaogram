@@ -13,7 +13,7 @@ import aiohttp
 proxy = {}
 s = aiohttp.ClientSession()
 
-@onCommand("sh", help="sh <cmd>: 执行指令")
+@onCommand("sh", minVer="1.0.0", help="sh <cmd>: 执行指令")
 async def handler(args: Args, client: Client, msg: Message):
     """ Use the command-line from Telegram. """
     user = getuser()

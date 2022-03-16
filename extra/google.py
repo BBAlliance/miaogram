@@ -85,7 +85,7 @@ def search(query, language=None, num=None, start=0):
                     result['text'] = text
                     yield result
 
-@onCommand("google", help="google: 你会用搜索吗")
+@onCommand("google", minVer="1.0.0", help="google: 你会用搜索吗")
 async def handler(args: Args, client: Client, msg: Message):
     text = args.getAll()
     if not text and msg.reply_to_message:

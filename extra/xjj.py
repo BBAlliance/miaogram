@@ -1,4 +1,4 @@
-from utils.utils import getVendor
+from utils.utils import getVendor, randPick
 from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
@@ -7,29 +7,27 @@ from random import randint
 from io import BytesIO
 
 s = aiohttp.ClientSession()
-libraries = [
-    "https://api.vvhan.com/api/mobil.girl?type=json",
-]
 localLibrary = getVendor("xjj.txt").strip().split()
+
+def getLink():
+    r = randint(0, 1)
+    if r == 0:
+        return randPick(localLibrary)
+    else:
+        return "https://se.jiba.xyz/xiuren.php"
 
 async def getCosplay():
     for _ in range(3):
-        lib = localLibrary
-        website = randint(0, len(lib)-1)
         try:
-            img = await s.get(lib[website])
+            img = await s.get(getLink())
             if img.status == 200:
-                # if website == 3:
-                #     img = get(img.content)
-                #     if img.status_code != 200:
-                #         continue
                 content = await img.read()
                 return BytesIO(content)
         except:
             continue
     return None
 
-@onCommand("xjj", help="xjj: 来一张小姐姐")
+@onCommand("xjj", minVer="1.0.0", help="xjj: 来一张小姐姐")
 async def handler(args: Args, client: Client, msg: Message):
     await msg.edit("获取中...")
     img = await getCosplay()

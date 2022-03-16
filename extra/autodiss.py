@@ -13,7 +13,7 @@ def getToken(msg: Message) -> str:
         return f"{msg.chat.id}:{msg.from_user.id}"
     return ""
 
-@onMessage()
+@onMessage(minVer="1.0.0")
 async def msgHandler(client: Client, msg: Message):
     t = getToken(msg)
     if not t:
@@ -33,7 +33,7 @@ async def msgHandler(client: Client, msg: Message):
         except:
             pass
 
-@onCommand("autodiss", help="autodiss: 回复一个人来开启自动骂人")
+@onCommand("autodiss", minVer="1.0.0", help="autodiss: 回复一个人来开启自动骂人")
 async def handler(args: Args, client: Client, msg: Message):
     if msg.reply_to_message:
         t = getToken(msg.reply_to_message)

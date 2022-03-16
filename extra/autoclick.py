@@ -1,4 +1,4 @@
-from .base import Args, onCommand, onMessage
+from controllers.base import Args, onCommand, onMessage
 from pyrogram import Client
 from pyrogram.types import Message
 from utils import logger
@@ -9,7 +9,7 @@ import asyncio
 toggler = ""
 s = aiohttp.ClientSession()
 
-@onMessage()
+@onMessage(minVer="1.0.0")
 async def msgHandler(client: Client, msg: Message):
     global toggler
     try:
@@ -23,7 +23,7 @@ async def msgHandler(client: Client, msg: Message):
     except:
         pass
 
-@onCommand("autoclick", help="autoclick <btnName>: 自动按按钮")
+@onCommand("autoclick", minVer="1.0.0", help="autoclick <btnName>: 自动按按钮")
 async def handler(args: Args, client: Client, msg: Message):
     global toggler
     pattern = args.get(0)

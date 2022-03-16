@@ -1,5 +1,5 @@
 from typing import List, Union
-from .base import Args, onCommand
+from controllers.base import Args, onCommand
 from pyrogram import Client
 from pyrogram.types import Message
 from pyrogram.methods.messages.search_messages import get_chunk
@@ -43,7 +43,7 @@ async def searchMessageReverse(
             if current >= total:
                 return
 
-@onCommand("dme", help="dme <count?>: 删除自己的信息")
+@onCommand("dme", minVer="1.0.0", help="dme <count?>: 删除自己的信息")
 async def handler(args: Args, client: Client, message: Message):
     counter = 0
     limit = args.getInt(0)

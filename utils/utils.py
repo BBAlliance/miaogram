@@ -1,10 +1,11 @@
 from asyncio import create_subprocess_shell, sleep
 from asyncio.subprocess import PIPE
-import json
+from typing import List, Dict
+from random import randint
 from os import path
 from threading import Thread
 
-import random
+import json
 
 def toInt(s) -> int:
     try:
@@ -13,7 +14,10 @@ def toInt(s) -> int:
         return 0
 
 def rand():
-    return random.randint(0, 65535)
+    return randint(0, 65535)
+
+def randPick(lib: List):
+    return lib[randint(0, len(lib)-1)]
 
 def randStr():
     i = rand()
@@ -79,7 +83,7 @@ def convertBytes(bits):
         zero += 1
     return f"{round(bits, 2)} {units[zero]}"
 
-def getTextFile(file) -> str:
+def getTextFile(file: str) -> str:
     content = ""
     try:
         with open(file, "r") as f:
@@ -88,17 +92,37 @@ def getTextFile(file) -> str:
         pass
     return content
 
-def getVendor(file):
+def writeTextFile(file: str, content: str):
+    try:
+        with open(file, "w") as f:
+            f.write(content)
+        return True
+    except:
+        pass
+    return False
+
+def getVendor(file: str):
     return getTextFile(path.join(path.dirname(__file__), "../vendors", file))
     
-def getDataFile(file):
+def getDataFile(file: str):
     return getTextFile(path.join(path.dirname(__file__), "../data", file))
 
-def getDataJSON(file):
+def setDataFile(file: str, content: str):
+    return writeTextFile(path.join(path.dirname(__file__), "../data", file), content)
+
+def existDataFile(file: str):
+    return path.exists(path.join(path.dirname(__file__), "../data", file))
+
+def getDataJSON(file: str) -> Dict:
     try:
         return json.loads(getDataFile(file))
     except:
         return {}
+
+def removeExt(file: str) -> str:
+    if not isinstance(file, str):
+        return ""
+    return ".".join(file.split(".")[:-1]) or file
 
 def tryf(fn):
     try:
