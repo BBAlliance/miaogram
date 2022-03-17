@@ -2,11 +2,11 @@ import json
 import sqlite3
 
 from os import path, mkdir, abort, rename
-from utils.utils import existDataFile, getDataJSON, setDataFile, toInt, tryf
+from utils.utils import existDataFile, getDataJSON, importing, setDataFile, toInt
 from .logger import error, info
 from typing import Tuple, List
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 DefaultConfig = {
     "prefix": "!",
@@ -35,6 +35,7 @@ def reloadConfig():
     Config = {**DefaultConfig, **getDataJSON("config.json")}
 
 def prepare():
+    # prepare data
     if not path.exists(DataDir):
         mkdir(DataDir, 644)
     
@@ -42,12 +43,16 @@ def prepare():
         error(f"Init Error: cannot init storage dir")
         abort()
     
+    # prepare sql
     global SQLiteInstance
     SQLiteInstance = sqlite3.connect(path.join(DataDir, 'miaogram.store'))
 
     cur = SQLiteInstance.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS kv (k VARCHAR(128) PRIMARY KEY, v TEXT)''')
     SQLiteInstance.commit()
+
+    # prepare preload
+    importing('data.__preload__') or importing('extra.__preload__')
 
 def migrate():
     # session migration, deprecated 1.0.0

@@ -10,6 +10,8 @@ from utils import logger
 import aiohttp 
 s = aiohttp.ClientSession()
 
+PIP = "speedtest-cli==2.1.3"
+
 @onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速")
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     test = Speedtest()

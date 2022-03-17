@@ -133,6 +133,9 @@ def tryf(fn):
     except:
         pass
 
+def importing(absolutePath, level=0):
+    return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level))
+
 async def pipInstall(packages: Union[str, List[str]]) -> bool:
     if isinstance(packages, list):
         packages = ' '.join(packages)
@@ -149,7 +152,7 @@ async def pipInstall(packages: Union[str, List[str]]) -> bool:
 
     stdout = stdout.decode().strip()
     stderr = stderr.decode().strip()
-    if stderr:
+    if stderr and not executor.returncode:
         error(f"Pip Installer Error: {executor.returncode}: {stderr}")
     
     if executor.returncode == 0:
@@ -172,7 +175,7 @@ async def apkInstall(packages: Union[str, List[str]]) -> bool:
 
     stdout = stdout.decode().strip()
     stderr = stderr.decode().strip()
-    if stderr:
+    if stderr and not executor.returncode:
         error(f"Apk Installer Error: {executor.returncode}: {stderr}")
     
     if executor.returncode == 0:

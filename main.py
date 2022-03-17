@@ -10,7 +10,6 @@ async def main():
     client = app.initClient()
     from controllers import init
     ensure_future(init())
-    
     await client.start()
     await idle()
     await client.stop()

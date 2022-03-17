@@ -5,10 +5,10 @@ WORKDIR /miaogram
 COPY . /miaogram
 
 # disabling cgo when built, so no need to install libc6-compat
-RUN apk add --no-cache --virtual build-deps gcc g++ zlib-dev jpeg-dev libxslt-dev libxml2-dev libjpeg \
+RUN apk add --no-cache --virtual build-deps gcc g++ zlib-dev jpeg-dev libxslt-dev libxml2-dev libjpeg-dev libwebp-dev libpng-dev \
     && pip install -r requirements.txt \
     && apk del build-deps \
-    && apk --no-cache add bash libjpeg \
+    && apk --no-cache add bash libjpeg libwebp libpng \
     && mkdir -p /miaogram/data
 
 VOLUME /miaogram/data

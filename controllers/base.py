@@ -1,12 +1,16 @@
+import asyncio
 import glob
 import sys
 import re
+import time
+import schedule
 from os import abort
 from os.path import dirname, basename, isfile, join, exists
 from typing import Callable, Dict, Union, List, Tuple
 from pyrogram import Client
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
+from threading import Thread
 
 from utils import app, logger, utils, config
 from utils.config import getConfig, DataDir, currentVersionWithin
@@ -48,11 +52,14 @@ async def importPlugin(module, prefix="", level=0):
         logger.debug(f"Reloading module: {module} ({not not instance})")
         return instance
 
-    instance = utils.tryf(lambda: __import__(moduleName, globals(), locals(), level=level))
+    instance = utils.importing(moduleName, level)
     logger.debug(f"Loading module: {module} ({not not instance})")
     return instance
 
 async def reloadPlugins():
+    # delete all jobs
+    schedule.clear("p:miaogram")
+
     folder = dirname(__file__)
     modules = [basename(f)[:-3] for f in glob.glob(join(folder, "*.py")) if isfile(f)]
     modules = list(set(modules))
@@ -176,3 +183,41 @@ def onMessage(minVer=None, maxVer=None, filters=None) -> callable:
             register(caller, func, None, None, None, filters)
         return caller
     return decorator
+
+every = schedule.every
+
+def onSchedule(job: schedule.Job, minVer=None, maxVer=None, args=(), kargs={}) -> callable:
+    def decorator(func: Callable) -> Callable:
+        moduleTag = f"m:{func.__module__}"
+        fnTag = getFnName(func)
+        # clean old
+        schedule.clear(moduleTag)
+
+        # create a wrapper
+        def wrapper(args, kargs):
+            func(*args, **kargs)
+
+        # register new
+        if systemCheck(fnTag, minVer, maxVer):
+            job.tag(moduleTag, "p:miaogram", f"f:{fnTag}").do(wrapper, args=args, kargs=kargs)
+        return func
+    return decorator
+
+schedulerRunning = False
+def startScheduler():
+    global schedulerRunning
+    if schedulerRunning:
+        return
+    schedulerRunning = True
+
+    def _runScheduler():
+        while not app.Killed():
+            try:
+                schedule.run_pending()
+            except Exception as e:
+                logger.error(f"Scheduler Error | cannot finish jobs: {e}")
+            time.sleep(1)
+
+    x = Thread(target=_runScheduler)
+    x.daemon = True
+    x.start()
