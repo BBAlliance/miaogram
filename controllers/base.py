@@ -31,7 +31,7 @@ async def scanPlugin(module: str) -> Dict[str, Dict[str, bool]]:
             packages: List[str] = apks[-1].strip().split()
             for package in packages:
                 result["apk"][package] = await utils.apkInstall(package)
-                logger.info('Register Service | external apk: {package} ({result["apk"][package]})')
+                logger.info(f'Register Service | external apk: {package} ({result["apk"][package]})')
                 overall = overall and result["apk"][package]
         pips = PIPPARSER.findall(file)
         if pips:
