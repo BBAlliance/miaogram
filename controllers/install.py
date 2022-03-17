@@ -4,7 +4,7 @@ from os.path import basename
 from utils.config import getConfig
 from utils.logger import error, info
 from utils.utils import getDataFile, randStr, removeExt, setDataFile
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 from os.path import join
@@ -15,7 +15,7 @@ proxy = {}
 s = aiohttp.ClientSession()
 
 @onCommand("install", help="install <url>: 回复一个文件或者发送链接来装一个库")
-async def handler(args: Args, client: Client, msg: Message):
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     m = await msg.edit_text('获取中...')
     url = args.getAll()
     text = ""

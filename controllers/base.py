@@ -1,19 +1,48 @@
 import glob
 import sys
+import re
 from os import abort
 from os.path import dirname, basename, isfile, join, exists
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Union, List, Tuple
 from pyrogram import Client
 from pyrogram.types import Message
 from pyrogram.handlers import MessageHandler
 
-from utils import app, logger, utils
+from utils import app, logger, utils, config
 from utils.config import getConfig, DataDir, currentVersionWithin
 
 import importlib
 
-def importPlugin(module, prefix="", level=0):
+PIPPARSER = re.compile('''^PIP\s*=\s*["']([\t a-zA-Z0-9_\-=<>!\.]+)["']\s*$''', re.M)
+APKPARSER = re.compile('''^APK\s*=\s*["']([\t a-zA-Z0-9_\-=<>!\.]+)["']\s*$''', re.M)
+async def scanPlugin(module: str) -> Dict[str, Dict[str, bool]]:
+    result: Dict[str, Dict[str, bool]] = None
+    path = config.fromBase(module.replace(".", "/") + ".py")
+    file = utils.getTextFile(path)
+    overall = True
+    if file:
+        result = {"apk": {}, "pip": {}, "overall": True}
+        apks = APKPARSER.findall(file)
+        if apks:
+            packages: List[str] = apks[-1].strip().split()
+            for package in packages:
+                result["apk"][package] = await utils.apkInstall(package)
+                logger.info('Register Service | external apk: {package} ({result["apk"][package]})')
+                overall = overall and result["apk"][package]
+        pips = PIPPARSER.findall(file)
+        if pips:
+            packages: List[str] = pips[-1].strip().split()
+            for package in packages:
+                result["pip"][package] = await utils.pipInstall(package)
+                logger.info(f'Register Service | external pip: {package} ({result["pip"][package]})')
+                overall = overall and result["pip"][package]
+        result["overall"] = overall 
+    return result
+
+async def importPlugin(module, prefix="", level=0):
     moduleName = f"{prefix}{module}"
+    await scanPlugin(moduleName)
+
     if moduleName in sys.modules:
         instance = importlib.reload(sys.modules[moduleName])
         logger.debug(f"Reloading module: {module} ({not not instance})")
@@ -23,7 +52,7 @@ def importPlugin(module, prefix="", level=0):
     logger.debug(f"Loading module: {module} ({not not instance})")
     return instance
 
-def reloadPlugins():
+async def reloadPlugins():
     folder = dirname(__file__)
     modules = [basename(f)[:-3] for f in glob.glob(join(folder, "*.py")) if isfile(f)]
     modules = list(set(modules))
@@ -31,16 +60,16 @@ def reloadPlugins():
     success = []
 
     for module in modules:
-        if importPlugin(module, prefix="controllers.", level=0):
+        if await importPlugin(module, prefix="controllers.", level=0):
             success.append(module)
     
     plugins = list(set(getConfig("plugins", [])))
     for plugin in plugins:
         if exists(join(DataDir, plugin+".py")):
-            if importPlugin(plugin, prefix="data.", level=0):
+            if await importPlugin(plugin, prefix="data.", level=0):
                 success.append(plugin)
         else:
-            if importPlugin(plugin, prefix="extra.", level=0):
+            if await importPlugin(plugin, prefix="extra.", level=0):
                 success.append(plugin)
 
     return success
@@ -74,6 +103,26 @@ class ExtraModule:
         self.handler = handler
         self.command = command
 
+class Context:
+    def __init__(self):
+        pass
+    
+    def get(self, key: str) -> str:
+        return config.readKey(key)
+
+    def set(self, key: str, value: str):
+        config.writeKeys([(key, value)])
+    
+    def sets(self, pairs: List[Tuple[str, str]]):
+        config.writeKeys(pairs)
+
+    def sql(self, query: str, *args, isMany) -> List[Tuple[str]]:
+        try:
+            return config.SQLRaw(query, *args, isMany=isMany).fetchall()
+        except:
+            return []
+
+globalContext = Context()
 groupNum = 0
 modules: Dict[str, ExtraModule] = {}
 
@@ -108,7 +157,7 @@ def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filter
                     logger.info(f"Calling plugin: {command} with={payloads[1:]}")
                     args = Args(payloads[1:])
                     try:
-                        await func(args, client, message)
+                        await func(args, client, message, globalContext)
                     except Exception as e:
                         logger.error(f"Unexpected Error: {e}")
         if systemCheck(getFnName(func), minVer, maxVer):
@@ -120,7 +169,7 @@ def onMessage(minVer=None, maxVer=None, filters=None) -> callable:
     def decorator(func: Callable) -> Callable:
         async def caller(client: Client, message: Message):
             try:
-                await func(client, message)
+                await func(client, message, globalContext)
             except Exception as e:
                 logger.error(f"Unexpected Error: {e}")
         if systemCheck(getFnName(func), minVer, maxVer):

@@ -1,10 +1,12 @@
 import json
-from os import path, mkdir, abort, rename
+import sqlite3
 
+from os import path, mkdir, abort, rename
 from utils.utils import existDataFile, getDataJSON, setDataFile, toInt, tryf
 from .logger import error, info
+from typing import Tuple, List
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 DefaultConfig = {
     "prefix": "!",
@@ -14,6 +16,10 @@ DefaultConfig = {
 Config = {**DefaultConfig}
 BaseDir = path.join(path.dirname(__file__), "..")
 DataDir = path.join(BaseDir, "data")
+SQLiteInstance: sqlite3.Connection = None
+
+def fromBase(p: str=""):
+    return path.join(BaseDir, p)
 
 def getConfig(path: str="", default=None):
     cfg = Config
@@ -35,6 +41,13 @@ def prepare():
     if not path.isdir(DataDir):
         error(f"Init Error: cannot init storage dir")
         abort()
+    
+    global SQLiteInstance
+    SQLiteInstance = sqlite3.connect(path.join(DataDir, 'miaogram.store'))
+
+    cur = SQLiteInstance.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS kv (k VARCHAR(128) PRIMARY KEY, v TEXT)''')
+    SQLiteInstance.commit()
 
 def migrate():
     # session migration, deprecated 1.0.0
@@ -49,6 +62,36 @@ def migrate():
         info("Init Migration: migrating initial plugins")
         Config["plugins"] = ["dme", "google", "ping", "re", "speedtest", "pic", "diss"]
         setDataFile("config.json", json.dumps(Config, indent=2))
+
+def SQLRaw(sql, iterables, isMany=False) -> sqlite3.Cursor:
+    try:
+        cur = SQLiteInstance.cursor()
+        result = None
+        if not isMany:
+            result = cur.execute(sql, iterables)
+        else:
+            result = cur.executemany(sql, iterables)
+        SQLiteInstance.commit()
+
+        return result
+    except Exception as e:
+        error(f"SQL Exec Error: cannot run query {sql} {iterables}: {e}")
+        return None
+
+def readKey(key: str) -> str:
+    try:
+        ret = SQLRaw('''SELECT k, v FROM kv WHERE k = ?''', (key,)).fetchall()
+        if ret and len(ret[0]) >= 2:
+            return ret[0][1]
+    except:
+        pass
+    return ''
+
+def writeKeys(pairs: List[Tuple[str, str]]):
+    try:
+        SQLRaw('''REPLACE INTO `kv` (k, v) VALUES (?, ?)''', pairs, isMany=True)
+    except:
+        pass
 
 def encodeVersion(v=''):
     vs = v.split(".") + ['0'] * 3

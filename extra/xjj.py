@@ -1,5 +1,5 @@
 from utils.utils import getVendor, randPick
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 import aiohttp 
@@ -28,7 +28,7 @@ async def getCosplay():
     return None
 
 @onCommand("xjj", minVer="1.0.0", help="xjj: 来一张小姐姐")
-async def handler(args: Args, client: Client, msg: Message):
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     await msg.edit("获取中...")
     img = await getCosplay()
     if img:

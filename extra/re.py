@@ -1,11 +1,11 @@
 import time
 import json
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 
 @onCommand("re", minVer="1.0.0", help="re: 回复一则消息来复读")
-async def handler(args: Args, client: Client, message: Message):
+async def handler(args: Args, client: Client, message: Message, ctx: Context):
     count = args.getInt(0)
     if count > 10 or count <= 0:
         count = 1

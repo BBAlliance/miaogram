@@ -1,5 +1,5 @@
 from typing import List, Union
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 from pyrogram.methods.messages.search_messages import get_chunk
@@ -44,7 +44,7 @@ async def searchMessageReverse(
                 return
 
 @onCommand("dme", minVer="1.0.0", help="dme <count?>: 删除自己的信息")
-async def handler(args: Args, client: Client, message: Message):
+async def handler(args: Args, client: Client, message: Message, ctx: Context):
     counter = 0
     limit = args.getInt(0)
     if limit > 1000 or limit <= 0:

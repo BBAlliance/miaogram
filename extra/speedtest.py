@@ -1,5 +1,5 @@
 from io import BytesIO
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 from PIL import Image
@@ -11,7 +11,7 @@ import aiohttp
 s = aiohttp.ClientSession()
 
 @onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速")
-async def handler(args: Args, client: Client, msg: Message):
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     test = Speedtest()
     await msg.edit("获取伺服器中...")
     

@@ -1,4 +1,4 @@
-from controllers.base import Args, onCommand, onMessage
+from controllers.base import Args, onCommand, onMessage, Context
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -14,7 +14,7 @@ def getToken(msg: Message) -> str:
     return ""
 
 @onMessage(minVer="1.0.0")
-async def msgHandler(client: Client, msg: Message):
+async def msgHandler(client: Client, msg: Message, ctx: Context):
     t = getToken(msg)
     if not t:
         return
@@ -34,7 +34,7 @@ async def msgHandler(client: Client, msg: Message):
             pass
 
 @onCommand("autodiss", minVer="1.0.0", help="autodiss: 回复一个人来开启自动骂人")
-async def handler(args: Args, client: Client, msg: Message):
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     if msg.reply_to_message:
         t = getToken(msg.reply_to_message)
         if not t:

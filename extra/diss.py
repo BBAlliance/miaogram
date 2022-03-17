@@ -1,4 +1,4 @@
-from controllers.base import Args, onCommand
+from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -8,7 +8,7 @@ proxy = {}
 s = aiohttp.ClientSession()
 
 @onCommand("diss", minVer="1.0.0", help="autodiss: 回复一个人来骂 TA")
-async def handler(args: Args, client: Client, msg: Message):
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     m = await msg.edit_text('獲取中...')
     try:
         r = await s.get("https://zuan.shabi.workers.dev")
