@@ -50,6 +50,7 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
         await msg.edit("生成图片中...")
         test.results.share()
     except (ShareResultsConnectFailure, ShareResultsSubmitFailure, RuntimeError) as e:
+        logger.error(f"Speedtest Error | cannot perform test: {e}")
         await msg.edit("测速中断，在测速的过程中发生错误")
         return
     
