@@ -4,7 +4,7 @@ from os.path import basename
 from utils.config import addPluginWhiteList, getConfig, VERSION
 from utils.logger import error, info
 from utils.utils import delDataFile, getDataFile, randStr, removeExt, setDataFile
-from controllers.base import Args, onCommand, Context, reloadExternalPlugin
+from controllers.base import Args, onCommand, Context, reloadExternalPlugin, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
 from os.path import join
@@ -60,6 +60,7 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     status = await reloadExternalPlugin(pluginName)
     if status:
         addPluginWhiteList(pluginName)
+        loadedPlugins.add(pluginName)
         prefix = getConfig("prefix", "")
         await msg.edit_text(f"🚩 安装成功，您可以运行 `{prefix}help {pluginName}` 来查看插件运行帮助 ~")
     else:

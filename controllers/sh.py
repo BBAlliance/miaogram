@@ -5,7 +5,7 @@ from pyrogram.types import Message
 
 from getpass import getuser
 from platform import node
-from os import geteuid, sep
+from os import geteuid
 from utils.utils import execute
 from utils.config import VERSION
 

@@ -1,6 +1,6 @@
 import asyncio
-from utils.config import VERSION, addPluginWhiteList, delPluginWhiteList, getConfig
-from controllers.base import Args, deregister, onCommand, Context, loadedPlugins, reloadExternalPlugin
+from utils.config import VERSION, delPluginWhiteList, getConfig
+from controllers.base import Args, deregister, onCommand, Context, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
 
