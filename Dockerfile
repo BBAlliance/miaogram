@@ -13,4 +13,4 @@ RUN apk add --no-cache bash libjpeg libwebp libpng \
 
 VOLUME /miaogram/data
 
-ENTRYPOINT ["/usr/local/bin/python3", "main.py"]
+ENTRYPOINT ["/usr/local/bin/python3", "-u", "main.py"]
