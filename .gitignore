@@ -9,3 +9,4 @@ data
 *.spec
 build
 dist
+tmp

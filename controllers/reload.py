@@ -23,7 +23,13 @@ async def handler(args: Args, client: Client, message: Message, ctx: Context):
         
         enabled = '\n'.join(enabled)
         disabled = '\n'.join(disabled)
-        await message.edit(f"🐛 扫描到的插件有:\n\n**已启用的插件**\n`{enabled}`\n\n**已禁用的插件**\n`{disabled}`", 'md')
+
+        if enabled:
+            enabled = f"\n\n**已启用的插件:**\n`{enabled}`"
+        if disabled:
+            disabled = f"\n\n**已禁用的插件**:\n`{disabled}`"
+
+        await message.edit(f"🐛 扫描到的插件有:{enabled}{disabled}", 'md')
     else:
         await message.edit("重载中...", 'md')
         reloadConfig()

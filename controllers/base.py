@@ -46,8 +46,8 @@ async def importPlugin(module, prefix="", level=0):
     moduleName = f"{prefix}{module}"
     await scanPlugin(moduleName)
 
+    deregisterRelated(module, ["data.", "extra.", "controllers."])
     if moduleName in sys.modules:
-        deregister(moduleName)
         instance = importlib.reload(sys.modules[moduleName])
         logger.debug(f"Reloading module: {module} ({not not instance})")
         return instance
@@ -159,15 +159,22 @@ def systemCheck(fnName, minVer=None, maxVer=None):
         return False
     return True
 
+def deregisterModule(mi):
+    if mi.type in ["command", "message"]:
+        App.remove_handler(mi.handler, mi.groupId)
+    elif mi.type in ["schedule"]:
+        schedule.cancel_job(mi.handler)
+
+def deregisterRelated(module, prefixes=[]):
+    for prefix in prefixes:
+        moduleName = f"{prefix}{module}"
+        deregister(moduleName)
+
 def deregister(moduleName):
     if moduleName in pluginModules:
         for functionName in pluginModules[moduleName]:
             logger.info(f"Register Service | unloading: {moduleName}.{functionName}")
-            mi = pluginModules[moduleName][functionName]
-            if mi.type in ["command", "message"]:
-                App.remove_handler(mi.handler, mi.groupId)
-            elif mi.type in ["schedule"]:
-                schedule.cancel_job(mi.handler)
+            deregisterModule(pluginModules[moduleName][functionName])
         del pluginModules[moduleName]
 
 def register(caller, original: Callable, type:str, command: str, help, longHelp, filters, version):
@@ -178,6 +185,9 @@ def register(caller, original: Callable, type:str, command: str, help, longHelp,
         pluginModules[moduleName] = {}
     logger.info(f"Register Service | loading: {moduleName}.{functionName}")
 
+    if functionName in pluginModules[moduleName]:
+        deregisterModule(pluginModules[moduleName][functionName])
+        del pluginModules[moduleName][functionName]
     if type in ["command", "message"]:
         handler = MessageHandler(caller, filters)
         pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, groupNum, type, command, help, longHelp, handler, version)
@@ -192,7 +202,7 @@ def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filter
             if message and message.from_user and message.from_user.is_self and message.text:
                 payloads = message.text.strip().split()
                 if len(payloads) > 0 and payloads[0] == getConfig("prefix", "") + command:
-                    logger.info(f"Calling plugin: {command} with={payloads[1:]}")
+                    logger.info(f"Calling plugin: {func.__module__}.{func.__name__} with={command} {payloads[1:]}")
                     args = Args(payloads[1:])
                     try:
                         await func(args, client, message, globalContext)

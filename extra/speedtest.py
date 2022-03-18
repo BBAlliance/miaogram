@@ -1,86 +1,101 @@
 from io import BytesIO
+import json
 from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 from PIL import Image
-from speedtest import Speedtest, ShareResultsConnectFailure, ShareResultsSubmitFailure
-from utils.utils import convertBytes, threadingExec
+from utils.utils import convertBytes, execute
 from utils import logger
+from os.path import exists
+import platform
 
 import aiohttp 
 s = aiohttp.ClientSession()
 
-PIP = "speedtest-cli==2.1.3"
+longHelp = """**使用方法：**
+`1.` 直接运行 `speedtest` 指令以用最近的服务器进行测速
+`2.` 加上服务器 id 例如 `speedtest 12345` 进行制定服务器测速
+`3.` 使用 `speedtest list` 来列出附近的服务器
 
-@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速", version="1.0.0")
-async def handler(args: Args, client: Client, msg: Message, ctx: Context):
-    test = Speedtest()
-    await msg.edit("获取伺服器中...")
-    
-    # 获取测速服务器
-    try:
-        appointed = args.getInt(0)
-        if appointed > 0:
-            test.get_servers(servers=[appointed])
+⚠️ 当前版本只支持 Linux x86_64 以及 aarch64 架构
+"""
+
+async def install() -> str:
+    if not exists("/tmp/speedtest"):
+        arch = platform.uname().machine
+        if arch in ["x86_64", "aarch64"]:
+            url = f"https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-{arch}.tgz"
+            await execute(f"""/bin/bash -c 'wget -qO- "{url}" | tar zx -C /tmp speedtest'""")
+            if exists("/tmp/speedtest"):
+                return ""
+            return "下载时发生错误，请重试"
         else:
-            # test.get_best_server()
-            test.get_closest_servers()
-    except Exception as e:
-        logger.error(f"Speedtest Error: {str(e)}")
-        await msg.edit("测速中断，无法获取测速服务器")
+            return f"不支持该系统架构: {arch}"
+    return ""
+
+@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速", version="1.0.1", longHelp=longHelp)
+async def handler(args: Args, client: Client, msg: Message, ctx: Context):
+    await msg.edit("运行中...")
+    installMsg = await install()
+    if installMsg:
+        await msg.edit(installMsg)
         return
-    
+
+    target = "/tmp/speedtest --accept-license --accept-gdpr -f json"
+
     if args.get(0) == "list":
-        srv = []
-        for distance in test.servers:
-            for server in test.servers[distance]:
-                cc = server["cc"]
-                sponsor = server["sponsor"]
-                id = "%5s" % (server["id"])
-                srv.append(f"- `{cc}` | `{id}` | `{sponsor}`")
-        await msg.edit("最近的服务器列表:\n\n" + "\n".join(srv), "md")
+        target += " -L"
+        try:
+            result = await execute(target, False)
+            result = json.loads(result)["servers"]
+            srv = []
+            for server in result:
+                location = server["location"]
+                sponsor = server["name"]
+                id = "%5d" % (server["id"])
+                srv.append(f"- `{id}` | `{location}` | `{sponsor}`")
+            await msg.edit("最近的服务器列表:\n\n" + "\n".join(srv), "md")
+        except:
+            await msg.edit("无法获取最近的服务器...")
         return
-    
-    # 开始测速
+
+    appointed = args.getInt(0)
+    if appointed > 0:
+        target += f" -s {appointed}"
+
     try:
-        await msg.edit("下行测速中...")
-        await threadingExec(test.download)
-        await msg.edit("上行测速中...")
-        await threadingExec(test.upload)
-        await msg.edit("生成图片中...")
-        test.results.share()
-    except (ShareResultsConnectFailure, ShareResultsSubmitFailure, RuntimeError) as e:
-        logger.error(f"Speedtest Error | cannot perform test: {e}")
-        await msg.edit("测速中断，在测速的过程中发生错误")
-        return
-    
-    # 处理信息
-    try:
-        result = test.results.dict()
+        result = await execute(target, False)
+        result = json.loads(result)
         des = (
             f"**Speedtest** \n"
             f"Server: `{result['server']['name']} - "
-            f"{result['server']['cc']}` \n"
-            f"Sponsor: `{result['server']['sponsor']}` \n"
-            f"Upload: `{convertBytes(result['upload'])}` \n"
-            f"Download: `{convertBytes(result['download'])}` \n"
-            f"Latency: `{result['ping']}` \n"
+            f"{result['server']['location']}` \n"
+            f"Host: `{result['server']['host']}` \n"
+            f"Upload: `{convertBytes(result['upload']['bandwidth'] * 8)}` \n"
+            f"Download: `{convertBytes(result['download']['bandwidth'] * 8)}` \n"
+            f"Latency: `{result['ping']['latency']}` \n"
+            f"Jitter: `{result['ping']['jitter']}` \n"
             f"Timestamp: `{result['timestamp']}`"
         )
 
-        # 处理图片
-        data = await s.get(result['share'])
-        content = await data.read()
-        with BytesIO() as buffer:
-            img = Image.open(BytesIO(content))
-            img = img.crop((17, 11, 727, 389))
-            img.save(buffer, format="PNG")
-            reply = None
-            if msg.reply_to_message:
-                reply = msg.reply_to_message_id
-            await client.send_photo(msg.chat.id, buffer, caption=des, parse_mode='md', reply_to_message_id=reply)
-        # await client.send_photo(msg.chat.id, result['share'], caption=des, parse_mode='md')
-    except:
+        # 开始处理图片
+        try:
+            data = await s.get(f"{result['result']['url']}.png")
+            content = await data.read()
+            with BytesIO() as buffer:
+                img = Image.open(BytesIO(content))
+                img = img.crop((17, 11, 727, 389))
+                img.save(buffer, format="PNG")
+                reply = None
+                if msg.reply_to_message:
+                    reply = msg.reply_to_message_id
+                await client.send_photo(msg.chat.id, buffer, caption=des, parse_mode='md', reply_to_message_id=reply)
+        except:
+            logger.info(result)
+            await msg.edit(des, 'md')
+            return
+    except Exception as e:
+        logger.error(f"Speedtest Error | message: {e}")
         await msg.edit("测速中断，无法生成测速报告")
         return
 

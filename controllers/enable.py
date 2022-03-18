@@ -13,16 +13,16 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
         await msg.edit(f'请传入插件名作为参数，您可以通过 `{prefix}reload scan` 来查看你的插件列表 ~', "md")
         return
     
+    doing = "启用"
     if pluginName in loadedPlugins:
-        await msg.edit('该插件已经启用，无需再次启用 ~', "md")
-        return
+        doing = "刷新"
 
     status = await reloadExternalPlugin(pluginName)
     if status:
         addPluginWhiteList(pluginName)
         prefix = getConfig("prefix", "")
         loadedPlugins.add(pluginName)
-        await msg.edit_text(f"🚩 启用成功，您可以运行 `{prefix}help {pluginName}` 来查看插件运行帮助 ~")
+        await msg.edit_text(f"🚩 {doing}成功，您可以运行 `{prefix}help {pluginName}` 来查看插件运行帮助 ~")
     else:
         await msg.edit_text(f"装载插件时发生问题，请确认插件代码无误或插件版本匹配 ~")
     

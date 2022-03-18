@@ -13,6 +13,7 @@ import json
 
 BaseDir = path.join(path.dirname(__file__), "..")
 DataDir = path.join(BaseDir, "data")
+TempDir = path.join(BaseDir, "tmp")
 
 def toInt(s) -> int:
     try:
@@ -112,19 +113,31 @@ def getVendor(file: str):
     return getTextFile(path.join(path.dirname(__file__), "../vendors", file))
     
 def getDataFile(file: str):
-    return getTextFile(path.join(path.dirname(__file__), "../data", file))
+    return getTextFile(path.join(DataDir, file))
+
+def getTempFile(file: str):
+    return getTextFile(path.join(TempDir, file))
 
 def getExtraFile(file: str):
     return getTextFile(path.join(path.dirname(__file__), "../extra", file))
 
 def setDataFile(file: str, content: str):
-    return writeTextFile(path.join(path.dirname(__file__), "../data", file), content)
+    return writeTextFile(path.join(DataDir, file), content)
 
 def delDataFile(file: str):
-    tryf(lambda: unlink(path.join(path.dirname(__file__), "../data", file)))
+    tryf(lambda: unlink(path.join(DataDir, file)))
 
 def existDataFile(file: str):
-    return path.exists(path.join(path.dirname(__file__), "../data", file))
+    return path.exists(path.join(DataDir, file))
+
+def setTempFile(file: str, content: str):
+    return writeTextFile(path.join(TempDir, file), content)
+
+def delTempFile(file: str):
+    tryf(lambda: unlink(path.join(TempDir, file)))
+
+def existTempFile(file: str):
+    return path.exists(path.join(TempDir, file))
 
 def existExtraFile(file: str):
     return path.exists(path.join(path.dirname(__file__), "../extra", file))
@@ -135,6 +148,12 @@ def listFiles(pattern: str = ""):
 def getDataJSON(file: str) -> Dict:
     try:
         return json.loads(getDataFile(file))
+    except:
+        return {}
+
+def getTempJSON(file: str) -> Dict:
+    try:
+        return json.loads(getTempFile(file))
     except:
         return {}
 
@@ -151,7 +170,7 @@ def tryf(fn, verbose=False):
             print(f"Trying Error | cannot accomplish goal: {e}")
 
 def importing(absolutePath, level=0):
-    return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level), True)
+    return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level))
 
 async def pipInstall(packages: Union[str, List[str]]) -> bool:
     if isinstance(packages, list):

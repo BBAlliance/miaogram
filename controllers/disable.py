@@ -21,10 +21,10 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     loadedPlugins.remove(pluginName)
 
     delPluginWhiteList(pluginName)
-    if existExtraFile(f"{pluginName}.py"):
-        deregister(f"extra.{pluginName}")
-    else:
-        deregister(f"data.{pluginName}")
+
+    deregister(f"extra.{pluginName}")
+    deregister(f"data.{pluginName}")
+
     await msg.edit_text(f"🚩 禁用 `{pluginName}` 成功 ~")
     
     await asyncio.sleep(10)

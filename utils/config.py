@@ -2,7 +2,7 @@ import json
 import sqlite3
 
 from os import path, mkdir, abort, rename
-from .utils import existDataFile, existExtraFile, getDataJSON, importing, setDataFile, toInt, BaseDir, DataDir
+from .utils import existDataFile, existExtraFile, getDataJSON, importing, setDataFile, toInt, BaseDir, DataDir, TempDir
 from .logger import error, info
 from typing import Tuple, List
 
@@ -53,8 +53,15 @@ def prepare():
     if not path.exists(DataDir):
         mkdir(DataDir, 644)
     
+    if not path.exists(TempDir):
+        mkdir(TempDir, 644)
+    
     if not path.isdir(DataDir):
         error(f"Init Error: cannot init storage dir")
+        abort()
+    
+    if not path.isdir(TempDir):
+        error(f"Init Error: cannot init temp dir")
         abort()
     
     # prepare sql
