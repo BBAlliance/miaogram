@@ -2,11 +2,11 @@ import json
 import sqlite3
 
 from os import path, mkdir, abort, rename
-from utils.utils import existDataFile, getDataJSON, importing, setDataFile, toInt
+from .utils import existDataFile, existExtraFile, getDataJSON, importing, setDataFile, toInt, BaseDir, DataDir
 from .logger import error, info
 from typing import Tuple, List
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 DefaultConfig = {
     "prefix": "!",
@@ -14,8 +14,6 @@ DefaultConfig = {
 }
 
 Config = {**DefaultConfig}
-BaseDir = path.join(path.dirname(__file__), "..")
-DataDir = path.join(BaseDir, "data")
 SQLiteInstance: sqlite3.Connection = None
 
 def fromBase(p: str=""):
@@ -29,6 +27,22 @@ def getConfig(path: str="", default=None):
         except:
             return default
     return cfg
+
+def addPluginWhiteList(pluginName: str) -> bool:
+    if pluginName in Config["plugins"]:
+        return True
+    if not existDataFile(f"{pluginName}.py") and not existExtraFile(f"{pluginName}.py"):
+        return False
+    Config["plugins"].append(pluginName)
+    setDataFile("config.json", json.dumps(Config, indent=2))
+    return True
+
+def delPluginWhiteList(pluginName: str) -> bool:
+    if pluginName not in Config["plugins"]:
+        return True
+    Config["plugins"].remove(pluginName)
+    setDataFile("config.json", json.dumps(Config, indent=2))
+    return True
 
 def reloadConfig():
     global Config

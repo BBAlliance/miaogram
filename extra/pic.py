@@ -6,7 +6,7 @@ from os import path, unlink
 from utils import utils
 from PIL import Image
 
-@onCommand("pic", minVer="1.0.0", help="pic: 回复下载静态图片")
+@onCommand("pic", minVer="1.0.0", help="pic: 回复下载静态图片", version="1.0.0")
 async def handler(_: Args, client: Client, message: Message, ctx: Context):
     re = message.reply_to_message
     

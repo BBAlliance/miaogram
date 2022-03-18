@@ -7,7 +7,7 @@ import aiohttp
 proxy = {}
 s = aiohttp.ClientSession()
 
-@onCommand("diss", minVer="1.0.0", help="autodiss: 回复一个人来骂 TA")
+@onCommand("diss", minVer="1.0.0", help="autodiss: 回复一个人来骂 TA", version="1.0.0")
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     m = await msg.edit_text('獲取中...')
     try:

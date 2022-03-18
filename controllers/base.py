@@ -1,4 +1,3 @@
-import asyncio
 import glob
 import sys
 import re
@@ -48,6 +47,7 @@ async def importPlugin(module, prefix="", level=0):
     await scanPlugin(moduleName)
 
     if moduleName in sys.modules:
+        deregister(moduleName)
         instance = importlib.reload(sys.modules[moduleName])
         logger.debug(f"Reloading module: {module} ({not not instance})")
         return instance
@@ -56,15 +56,30 @@ async def importPlugin(module, prefix="", level=0):
     logger.debug(f"Loading module: {module} ({not not instance})")
     return instance
 
+async def reloadExternalPlugin(plugin) -> bool:
+    prefix = "extra."
+    if exists(join(DataDir, plugin+".py")):
+        prefix = "data."
+    
+    if await importPlugin(plugin, prefix=prefix, level=0):
+        return True
+    else:
+        return False
+
+loadedPlugins = set()
 async def reloadPlugins():
+    global loadedPlugins
+    
     # delete all jobs
     schedule.clear("p:miaogram")
+    loadedPlugins.clear()
 
     folder = dirname(__file__)
     modules = [basename(f)[:-3] for f in glob.glob(join(folder, "*.py")) if isfile(f)]
     modules = list(set(modules))
     modules = [m for m in modules if not m.startswith(".") and not m.startswith("_") and m != "base"]
     success = []
+    failure = []
 
     for module in modules:
         if await importPlugin(module, prefix="controllers.", level=0):
@@ -72,14 +87,14 @@ async def reloadPlugins():
     
     plugins = list(set(getConfig("plugins", [])))
     for plugin in plugins:
-        if exists(join(DataDir, plugin+".py")):
-            if await importPlugin(plugin, prefix="data.", level=0):
-                success.append(plugin)
+        if await reloadExternalPlugin(plugin):
+            success.append(plugin)
         else:
-            if await importPlugin(plugin, prefix="extra.", level=0):
-                success.append(plugin)
+            failure.append(plugin)
 
-    return success
+    for p in success:
+        loadedPlugins.add(p)
+    return success, failure
 
 if app.App == None:
     logger.error("Cannot call controller init before app is defined.")
@@ -101,14 +116,16 @@ class Args(list):
 
 
 class ExtraModule:
-    def __init__(self, module, fn, groupId, command, help, longHelp, handler):
+    def __init__(self, module, fn, groupId, type, command, help, longHelp, handler, version):
         self.module = module
         self.groupId = groupId
         self.fn = fn
         self.help = help
         self.longHelp = longHelp
         self.handler = handler
+        self.type = type
         self.command = command
+        self.version = version
 
 class Context:
     def __init__(self):
@@ -131,7 +148,7 @@ class Context:
 
 globalContext = Context()
 groupNum = 0
-modules: Dict[str, ExtraModule] = {}
+pluginModules: Dict[str, Dict[str, ExtraModule]] = {}
 
 def getFnName(func):
     return f"{func.__module__}.{func.__name__}"
@@ -142,20 +159,34 @@ def systemCheck(fnName, minVer=None, maxVer=None):
         return False
     return True
 
-def register(caller, original: Callable, command: str, help, longHelp, filters):
-    global groupNum
-    fnName = getFnName(original)
-    if fnName in modules:
-        logger.info(f"Register Service | reloading: {fnName}")
-        App.remove_handler(modules[fnName].handler, modules[fnName].groupId)
-    else:
-        logger.info(f"Register Service | loading: {fnName}")
-    handler = MessageHandler(caller, filters)
-    modules[fnName] = ExtraModule(original.__module__, original.__name__, groupNum, command, help, longHelp, handler)
-    App.add_handler(handler, groupNum)
-    groupNum += 1
+def deregister(moduleName):
+    if moduleName in pluginModules:
+        for functionName in pluginModules[moduleName]:
+            logger.info(f"Register Service | unloading: {moduleName}.{functionName}")
+            mi = pluginModules[moduleName][functionName]
+            if mi.type in ["command", "message"]:
+                App.remove_handler(mi.handler, mi.groupId)
+            elif mi.type in ["schedule"]:
+                schedule.cancel_job(mi.handler)
+        del pluginModules[moduleName]
 
-def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filters=None) -> callable:
+def register(caller, original: Callable, type:str, command: str, help, longHelp, filters, version):
+    global groupNum
+    moduleName = original.__module__
+    functionName = original.__name__
+    if moduleName not in pluginModules:
+        pluginModules[moduleName] = {}
+    logger.info(f"Register Service | loading: {moduleName}.{functionName}")
+
+    if type in ["command", "message"]:
+        handler = MessageHandler(caller, filters)
+        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, groupNum, type, command, help, longHelp, handler, version)
+        App.add_handler(handler, groupNum)
+        groupNum += 1
+    elif type in ["schedule"]:
+        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, -1, type, command, help, longHelp, caller, version)
+
+def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filters=None, version="0.0.0") -> callable:
     def decorator(func: Callable) -> Callable:
         async def caller(client: Client, message: Message):
             if message and message.from_user and message.from_user.is_self and message.text:
@@ -168,11 +199,11 @@ def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filter
                     except Exception as e:
                         logger.error(f"Unexpected Error: {e}")
         if systemCheck(getFnName(func), minVer, maxVer):
-            register(caller, func, command, help or f"{command}", longHelp, filters)
+            register(caller, func, "command", command, help or f"{command}", longHelp, filters, version)
         return caller
     return decorator
 
-def onMessage(minVer=None, maxVer=None, filters=None) -> callable:
+def onMessage(minVer=None, maxVer=None, filters=None, version="0.0.0") -> callable:
     def decorator(func: Callable) -> Callable:
         async def caller(client: Client, message: Message):
             try:
@@ -180,13 +211,13 @@ def onMessage(minVer=None, maxVer=None, filters=None) -> callable:
             except Exception as e:
                 logger.error(f"Unexpected Error: {e}")
         if systemCheck(getFnName(func), minVer, maxVer):
-            register(caller, func, None, None, None, filters)
+            register(caller, func, "message", None, None, None, filters, version)
         return caller
     return decorator
 
 every = schedule.every
 
-def onSchedule(job: schedule.Job, minVer=None, maxVer=None, args=(), kargs={}) -> callable:
+def onSchedule(job: schedule.Job, minVer=None, maxVer=None, version="0.0.0", args=(), kargs={}) -> callable:
     def decorator(func: Callable) -> Callable:
         moduleTag = f"m:{func.__module__}"
         fnTag = getFnName(func)
@@ -200,6 +231,7 @@ def onSchedule(job: schedule.Job, minVer=None, maxVer=None, args=(), kargs={}) -
         # register new
         if systemCheck(fnTag, minVer, maxVer):
             job.tag(moduleTag, "p:miaogram", f"f:{fnTag}").do(wrapper, args=args, kargs=kargs)
+            register(job, func, "schedule", None, None, None, None, version)
         return func
     return decorator
 

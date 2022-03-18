@@ -43,7 +43,7 @@ async def searchMessageReverse(
             if current >= total:
                 return
 
-@onCommand("dme", minVer="1.0.0", help="dme <count?>: 删除自己的信息")
+@onCommand("dme", minVer="1.0.0", help="dme <count?>: 删除自己的信息", version="1.0.0")
 async def handler(args: Args, client: Client, message: Message, ctx: Context):
     counter = 0
     limit = args.getInt(0)

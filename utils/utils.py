@@ -4,11 +4,15 @@ from asyncio import create_subprocess_shell, sleep
 from asyncio.subprocess import PIPE
 from typing import List, Dict, Union
 from random import randint
-from os import path
+from os import path, unlink
 from threading import Thread
+from glob import glob
 from .logger import error
 
 import json
+
+BaseDir = path.join(path.dirname(__file__), "..")
+DataDir = path.join(BaseDir, "data")
 
 def toInt(s) -> int:
     try:
@@ -110,11 +114,23 @@ def getVendor(file: str):
 def getDataFile(file: str):
     return getTextFile(path.join(path.dirname(__file__), "../data", file))
 
+def getExtraFile(file: str):
+    return getTextFile(path.join(path.dirname(__file__), "../extra", file))
+
 def setDataFile(file: str, content: str):
     return writeTextFile(path.join(path.dirname(__file__), "../data", file), content)
 
+def delDataFile(file: str):
+    tryf(lambda: unlink(path.join(path.dirname(__file__), "../data", file)))
+
 def existDataFile(file: str):
     return path.exists(path.join(path.dirname(__file__), "../data", file))
+
+def existExtraFile(file: str):
+    return path.exists(path.join(path.dirname(__file__), "../extra", file))
+
+def listFiles(pattern: str = ""):
+    return [f for f in glob(path.join(BaseDir, pattern)) if path.isfile(f)]
 
 def getDataJSON(file: str) -> Dict:
     try:
@@ -127,14 +143,15 @@ def removeExt(file: str) -> str:
         return ""
     return ".".join(file.split(".")[:-1]) or file
 
-def tryf(fn):
+def tryf(fn, verbose=False):
     try:
         return fn()
-    except:
-        pass
+    except Exception as e:
+        if verbose:
+            print(f"Trying Error | cannot accomplish goal: {e}")
 
 def importing(absolutePath, level=0):
-    return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level))
+    return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level), True)
 
 async def pipInstall(packages: Union[str, List[str]]) -> bool:
     if isinstance(packages, list):

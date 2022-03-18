@@ -1,4 +1,4 @@
-from typing import BinaryIO
+from io import BytesIO
 from .base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
@@ -7,13 +7,14 @@ from getpass import getuser
 from platform import node
 from os import geteuid, sep
 from utils.utils import execute
+from utils.config import VERSION
 
 import aiohttp
 
 proxy = {}
 s = aiohttp.ClientSession()
 
-@onCommand("sh", minVer="1.0.0", help="sh <cmd>: 执行指令")
+@onCommand("sh", help="sh <cmd>: 执行指令", version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     """ Use the command-line from Telegram. """
     user = getuser()
@@ -38,7 +39,7 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     if result:
         if len(result) >= 4096:
             await msg.delete()
-            await client.send_document(msg.chat.id, BinaryIO(bytes(result)), caption=headmark, parse_mode='md', file_name='execution.log')
+            await client.send_document(msg.chat.id, BytesIO(bytes(result)), caption=headmark, parse_mode='md', file_name='execution.log')
         else:
             result.replace("`", "'")
             await msg.edit(f"{headmark}\n\n`{result}`")

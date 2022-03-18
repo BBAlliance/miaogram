@@ -33,7 +33,7 @@ async def msgHandler(client: Client, msg: Message, ctx: Context):
         except:
             pass
 
-@onCommand("autodiss", minVer="1.0.0", help="autodiss: 回复一个人来开启自动骂人")
+@onCommand("autodiss", minVer="1.0.0", help="autodiss: 回复一个人来开启自动骂人", version="1.0.0")
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     if msg.reply_to_message:
         t = getToken(msg.reply_to_message)

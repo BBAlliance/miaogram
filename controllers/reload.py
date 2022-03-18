@@ -1,12 +1,38 @@
-from utils.config import reloadConfig
-from .base import Args, onCommand, reloadPlugins, Context
+from os.path import basename
+from utils.config import reloadConfig, VERSION
+from utils.utils import listFiles, removeExt
+from .base import Args, onCommand, reloadPlugins, Context, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("reload", minVer="1.0.0", help="reload: 重载配置和所有插件")
-async def handler(_: Args, client: Client, message: Message, ctx: Context):
-    await message.edit("重载中...", 'md')
-    reloadConfig()
-    success = await reloadPlugins()
-    success = "\n".join(success)
-    await message.edit(f"🐛 重载这些插件成功啦:\n\n`{success}`", 'md')
+@onCommand("reload", help="reload <scan?>: 重载配置和所有插件", version=VERSION)
+async def handler(args: Args, client: Client, message: Message, ctx: Context):
+    arg = args.get(0)
+    if arg == "scan":
+        loaded = loadedPlugins.copy()
+        enabled = []
+        disabled = []
+
+        addons = [removeExt(basename(f)) for f in listFiles("extra/*.py") + listFiles("data/*.py")]
+        addons = [f for f in addons if not f.startswith("__")]
+        for plugin in addons:
+            if plugin in loaded:
+                enabled.append(plugin)
+            else:
+                disabled.append(plugin)
+        
+        enabled = '\n'.join(enabled)
+        disabled = '\n'.join(disabled)
+        await message.edit(f"🐛 扫描到的插件有:\n\n**已启用的插件**\n`{enabled}`\n\n**已禁用的插件**\n`{disabled}`", 'md')
+    else:
+        await message.edit("重载中...", 'md')
+        reloadConfig()
+        success, failure = await reloadPlugins()
+        success = "\n".join(success)
+        failure = "\n".join(failure)
+
+        if success:
+            success = f"\n\n**已加载:**\n`{success}`"
+        if failure:
+            failure = f"\n\n**失败插件**:\n`{failure}`"
+        await message.edit(f"🐛 重载插件列表完成:{success}{failure}", 'md')

@@ -12,7 +12,7 @@ s = aiohttp.ClientSession()
 
 PIP = "speedtest-cli==2.1.3"
 
-@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速")
+@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速", version="1.0.0")
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     test = Speedtest()
     await msg.edit("获取伺服器中...")
