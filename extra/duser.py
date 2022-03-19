@@ -3,7 +3,7 @@ from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("duser", minVer="1.4.0", help="duser: 删除用户群内所有信息", allowAnonymous=True, version="1.0.0")
+@onCommand("duser", minVer="1.4.1", help="duser: 删除用户群内所有信息", allowAnonymous=True, version="1.0.0")
 async def handler(_: Args, client: Client, message: Message, ctx: Context):
     id = 0
     if message.reply_to_message:
