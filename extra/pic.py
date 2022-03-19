@@ -18,7 +18,7 @@ async def handler(_: Args, client: Client, message: Message, ctx: Context):
         await message.edit(f"处理中...")
         try:
             fname = re.sticker.file_name
-            f = await client.download_media(re, file_name=path.join("data/downloads", utils.randStr() + fname))
+            f = await client.download_media(re, file_name=path.join("tmp/downloads", utils.randStr() + fname))
 
             with BytesIO() as buffer:
                 img = Image.open(f).convert("RGB")

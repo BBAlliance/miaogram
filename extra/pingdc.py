@@ -18,9 +18,9 @@ async def handler(_: Args, client: Client, message: Message, ctx: Context):
         result = await execute(f"ping -c 1 {DCs[dc]} | awk -F '/' " + "'END {print $5}'")
         data.append(result)
     await message.edit(
-        f"DC1(🇺🇸 迈阿密): `{data[0]}ms`\n"
-        f"DC2(🇳🇱 阿姆斯特丹): `{data[1]}ms`\n"
-        f"DC3(🇺🇸 迈阿密): `{data[2]}ms`\n"
-        f"DC4(🇳🇱 阿姆斯特丹): `{data[3]}ms`\n"
-        f"DC5(🇸🇬 新加坡): `{data[4]}ms`"
+        f"`DC1`(🇺🇸 迈阿密): `{data[0]}ms`\n"
+        f"`DC2`(🇳🇱 阿姆斯特丹): `{data[1]}ms`\n"
+        f"`DC3`(🇺🇸 迈阿密): `{data[2]}ms`\n"
+        f"`DC4`(🇳🇱 阿姆斯特丹): `{data[3]}ms`\n"
+        f"`DC5`(🇸🇬 新加坡): `{data[4]}ms`"
     , "md")

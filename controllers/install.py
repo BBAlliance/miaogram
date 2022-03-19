@@ -2,8 +2,8 @@ import asyncio
 from os import unlink
 from os.path import basename
 from utils.config import addPluginWhiteList, getConfig, VERSION
-from utils.logger import error, info
-from utils.utils import delDataFile, getDataFile, randStr, removeExt, setDataFile
+from utils.logger import error
+from utils.utils import delDataFile, getTempFile, randStr, removeExt, setDataFile
 from controllers.base import Args, onCommand, Context, reloadExternalPlugin, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
@@ -24,9 +24,9 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
         doc = msg.reply_to_message.document
         if doc and (doc.file_name.endswith(".py") or doc.file_name.endswith(".txt")):
             fname = randStr() + ".py"
-            fpath = await client.download_media(msg.reply_to_message, file_name=join("data/downloads", fname))
+            fpath = await client.download_media(msg.reply_to_message, file_name=join("tmp/downloads", fname))
             pluginName = removeExt(doc.file_name)
-            text = getDataFile(f"downloads/{fname}")
+            text = getTempFile(f"downloads/{fname}")
             unlink(fpath)
         else:
             await msg.edit_text('回复的文件格式错误，请务必回复一个 .py 文档 ~')

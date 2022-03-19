@@ -9,14 +9,8 @@ from os import geteuid
 from utils.utils import execute
 from utils.config import VERSION
 
-import aiohttp
-
-proxy = {}
-s = aiohttp.ClientSession()
-
 @onCommand("sh", help="sh <cmd>: 执行指令", version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
-    """ Use the command-line from Telegram. """
     user = getuser()
     command = args.getAll()
     hostname = node()
@@ -39,9 +33,9 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     if result:
         if len(result) >= 4096:
             await msg.delete()
-            await client.send_document(msg.chat.id, BytesIO(bytes(result)), caption=headmark, parse_mode='md', file_name='execution.log')
+            await client.send_document(msg.chat.id, BytesIO(bytes(result, encoding='utf-8')), caption=headmark, parse_mode='md', file_name='execution.log')
         else:
-            result.replace("`", "'")
+            result = result.replace("`", "'")
             await msg.edit(f"{headmark}\n\n`{result}`")
     else:
         await msg.edit(f"{headmark}\n\n`无结果返回`")

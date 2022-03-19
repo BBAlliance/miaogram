@@ -4,10 +4,10 @@ from controllers.base import Args, onCommand, Context
 from pyrogram import Client
 from pyrogram.types import Message
 from PIL import Image
-from utils.utils import convertBytes, execute
+from utils.utils import TempDir, convertBytes, execute, existTempFile
 from utils import logger
-from os.path import exists
 import platform
+from os.path import join
 
 import aiohttp 
 s = aiohttp.ClientSession()
@@ -21,19 +21,19 @@ longHelp = """**使用方法：**
 """
 
 async def install() -> str:
-    if not exists("/tmp/speedtest"):
+    if not existTempFile("speedtest"):
         arch = platform.uname().machine
         if arch in ["x86_64", "aarch64"]:
             url = f"https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-{arch}.tgz"
-            await execute(f"""/bin/bash -c 'wget -qO- "{url}" | tar zx -C /tmp speedtest'""")
-            if exists("/tmp/speedtest"):
+            await execute(f"""/bin/bash -c 'wget -qO- "{url}" | tar zx -C {TempDir} speedtest'""")
+            if existTempFile("speedtest"):
                 return ""
             return "下载时发生错误，请重试"
         else:
             return f"不支持该系统架构: {arch}"
     return ""
 
-@onCommand("speedtest", minVer="1.0.0", help="speedtest <id|list?>: 服务器测速", version="1.0.1", longHelp=longHelp)
+@onCommand("speedtest", minVer="1.3.0", help="speedtest <id|list?>: 服务器测速", version="1.0.2", longHelp=longHelp)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     await msg.edit("运行中...")
     installMsg = await install()
@@ -41,8 +41,7 @@ async def handler(args: Args, client: Client, msg: Message, ctx: Context):
         await msg.edit(installMsg)
         return
 
-    target = "/tmp/speedtest --accept-license --accept-gdpr -f json"
-
+    target = join(TempDir, "speedtest") + " --accept-license --accept-gdpr -f json"
     if args.get(0) == "list":
         target += " -L"
         try:

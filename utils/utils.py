@@ -1,13 +1,10 @@
-import sys
-
 from asyncio import create_subprocess_shell, sleep
 from asyncio.subprocess import PIPE
-from typing import List, Dict, Union
+from typing import List, Dict
 from random import randint
 from os import path, unlink
 from threading import Thread
 from glob import glob
-from .logger import error
 
 import json
 
@@ -171,49 +168,3 @@ def tryf(fn, verbose=False):
 
 def importing(absolutePath, level=0):
     return tryf(lambda: __import__(absolutePath, globals(), locals(), level=level))
-
-async def pipInstall(packages: Union[str, List[str]]) -> bool:
-    if isinstance(packages, list):
-        packages = ' '.join(packages)
-    executor = await create_subprocess_shell(
-        ' '.join([sys.executable, "-m", "pip", "install", packages]),
-        stdout=PIPE,
-        stderr=PIPE
-    )
-
-    try:
-        stdout, stderr = await executor.communicate()
-    except:
-        return False
-
-    stdout = stdout.decode().strip()
-    stderr = stderr.decode().strip()
-    if stderr and not executor.returncode:
-        error(f"Pip Installer Error: {executor.returncode}: {stderr}")
-    
-    if executor.returncode == 0:
-        return True
-    return False
-
-async def apkInstall(packages: Union[str, List[str]]) -> bool:
-    if isinstance(packages, list):
-        packages = ' '.join(packages)
-    executor = await create_subprocess_shell(
-        ' '.join(["apk", "add", packages]),
-        stdout=PIPE,
-        stderr=PIPE
-    )
-
-    try:
-        stdout, stderr = await executor.communicate()
-    except:
-        return False
-
-    stdout = stdout.decode().strip()
-    stderr = stderr.decode().strip()
-    if stderr and not executor.returncode:
-        error(f"Apk Installer Error: {executor.returncode}: {stderr}")
-    
-    if executor.returncode == 0:
-        return True
-    return False

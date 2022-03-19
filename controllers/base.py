@@ -12,6 +12,7 @@ from pyrogram.handlers import MessageHandler
 from threading import Thread
 
 from utils import app, logger, utils, config
+from utils.sys import pipInstall, apkInstall
 from utils.config import getConfig, DataDir, currentVersionWithin
 
 import importlib
@@ -29,14 +30,14 @@ async def scanPlugin(module: str) -> Dict[str, Dict[str, bool]]:
         if apks:
             packages: List[str] = apks[-1].strip().split()
             for package in packages:
-                result["apk"][package] = await utils.apkInstall(package)
+                result["apk"][package] = await apkInstall(package)
                 logger.info(f'Register Service | external apk: {package} ({result["apk"][package]})')
                 overall = overall and result["apk"][package]
         pips = PIPPARSER.findall(file)
         if pips:
             packages: List[str] = pips[-1].strip().split()
             for package in packages:
-                result["pip"][package] = await utils.pipInstall(package)
+                result["pip"][package] = await pipInstall(package)
                 logger.info(f'Register Service | external pip: {package} ({result["pip"][package]})')
                 overall = overall and result["pip"][package]
         result["overall"] = overall 
@@ -116,10 +117,11 @@ class Args(list):
 
 
 class ExtraModule:
-    def __init__(self, module, fn, groupId, type, command, help, longHelp, handler, version):
+    def __init__(self, module: str, fn: str, callable: Callable, groupId: int, type: str, command: str, help: str, longHelp: str, handler, version: str):
         self.module = module
         self.groupId = groupId
         self.fn = fn
+        self.callable = callable
         self.help = help
         self.longHelp = longHelp
         self.handler = handler
@@ -190,11 +192,33 @@ def register(caller, original: Callable, type:str, command: str, help, longHelp,
         del pluginModules[moduleName][functionName]
     if type in ["command", "message"]:
         handler = MessageHandler(caller, filters)
-        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, groupNum, type, command, help, longHelp, handler, version)
+        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, original, groupNum, type, command, help, longHelp, handler, version)
         App.add_handler(handler, groupNum)
         groupNum += 1
     elif type in ["schedule"]:
-        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, -1, type, command, help, longHelp, caller, version)
+        pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, original, -1, type, command, help, longHelp, caller, version)
+
+async def call(pluginName: str, args: Args, client: Client, msg: Message, ctx: Context):
+    callers = pluginName.split(".")
+    functionName = callers.pop()
+    moduleName = ".".join(callers)
+    returns = None
+    try:
+        if moduleName in pluginModules and functionName in pluginModules[moduleName]:
+            m = pluginModules[moduleName][functionName]
+            if m.type == "command":
+                returns = await m.callable(args, client, msg, ctx)
+            elif m.type == "message":
+                returns = await m.callable(client, msg, ctx)
+            elif m.type == "schedule":
+                returns = m.callable()
+            else:
+                return None, "unknown plugin type"
+        else:
+            return None, "plugin not found"
+    except Exception as e:
+        return None, f"{e}"
+    return returns, ""
 
 def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filters=None, version="0.0.0") -> callable:
     def decorator(func: Callable) -> Callable:
