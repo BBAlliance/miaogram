@@ -14,7 +14,7 @@ import aiohttp
 proxy = {}
 s = aiohttp.ClientSession()
 
-@onCommand("install", help="install <url>: 回复一个文件或者发送链接来装一个库", version=VERSION)
+@onCommand("install", help="install <url>: 回复一个文件或者发送链接来装一个库", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     await msg.edit_text('获取中...')
     url = args.getAll()

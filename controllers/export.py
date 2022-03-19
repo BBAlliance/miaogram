@@ -5,7 +5,7 @@ from controllers.base import Args, onCommand, Context, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("export", help="export <plugin>: 导出并分享一个插件", version=VERSION)
+@onCommand("export", help="export <plugin>: 导出并分享一个插件", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     pluginName = args.get(0)
     prefix = getConfig("prefix", "")

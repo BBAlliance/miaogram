@@ -6,7 +6,7 @@ from .utils import existDataFile, existExtraFile, getDataJSON, importing, setDat
 from .logger import error, info
 from typing import Tuple, List
 
-VERSION = "1.4.0"
+VERSION = "1.4.1"
 
 DefaultConfig = {
     "prefix": "!",

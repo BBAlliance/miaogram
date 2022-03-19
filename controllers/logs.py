@@ -7,7 +7,7 @@ from pyrogram.types import Message
 
 from utils.config import VERSION
 
-@onCommand("logs", help="logs <lines>: 获取系统日志", version=VERSION)
+@onCommand("logs", help="logs <lines>: 获取系统日志", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     lines = args.getInt(0)
     if lines <= 0:

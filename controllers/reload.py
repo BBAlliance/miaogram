@@ -5,7 +5,7 @@ from .base import Args, onCommand, reloadPlugins, Context, loadedPlugins
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("reload", help="reload <scan?>: 重载配置和所有插件", version=VERSION)
+@onCommand("reload", help="reload <scan?>: 重载配置和所有插件", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, message: Message, ctx: Context):
     arg = args.get(0)
     if arg == "scan":

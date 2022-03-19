@@ -4,7 +4,7 @@ from controllers.base import Args, onCommand, Context, loadedPlugins, reloadExte
 from pyrogram import Client
 from pyrogram.types import Message
 
-@onCommand("enable", help="enable <plugin>: 启用一个插件", version=VERSION)
+@onCommand("enable", help="enable <plugin>: 启用一个插件", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     pluginName = args.get(0)
     prefix = getConfig("prefix", "")

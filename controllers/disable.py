@@ -6,7 +6,7 @@ from pyrogram.types import Message
 
 from utils.utils import existExtraFile
 
-@onCommand("disable", help="disable <plugin>: 禁用一个插件", version=VERSION)
+@onCommand("disable", help="disable <plugin>: 禁用一个插件", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     pluginName = args.get(0)
     prefix = getConfig("prefix", "")

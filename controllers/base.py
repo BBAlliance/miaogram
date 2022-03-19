@@ -198,6 +198,14 @@ def register(caller, original: Callable, type:str, command: str, help, longHelp,
     elif type in ["schedule"]:
         pluginModules[moduleName][functionName] = ExtraModule(original.__module__, original.__name__, original, -1, type, command, help, longHelp, caller, version)
 
+def getCaller(pluginName: str):
+    prefixes = ["", "extra.", "data."]
+    for prefix in prefixes:
+        moduleName = f"{prefix}{pluginName}"
+        if moduleName in pluginModules and pluginModules[moduleName]:
+            return pluginModules[moduleName]
+    return {}
+
 async def call(pluginName: str, args: Args, client: Client, msg: Message, ctx: Context):
     callers = pluginName.split(".")
     functionName = callers.pop()
@@ -220,10 +228,16 @@ async def call(pluginName: str, args: Args, client: Client, msg: Message, ctx: C
         return None, f"{e}"
     return returns, ""
 
-def onCommand(command="", help="", longHelp="", minVer=None, maxVer=None, filters=None, version="0.0.0") -> callable:
+def isAnonymous(message: Message):
+    return message and message.outgoing and not message.from_user and message.sender_chat
+
+def isSelf(message: Message):
+    return message and message.from_user and message.from_user.is_self
+
+def onCommand(command="", help="", longHelp="", allowAnonymous=False, minVer=None, maxVer=None, filters=None, version="0.0.0") -> callable:
     def decorator(func: Callable) -> Callable:
         async def caller(client: Client, message: Message):
-            if message and message.from_user and message.from_user.is_self and message.text:
+            if ((allowAnonymous and isAnonymous(message)) or isSelf(message)) and message.text:
                 payloads = message.text.strip().split()
                 if len(payloads) > 0 and payloads[0] == getConfig("prefix", "") + command:
                     logger.info(f"Calling plugin: {func.__module__}.{func.__name__} with={command} {payloads[1:]}")

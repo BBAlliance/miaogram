@@ -9,7 +9,7 @@ from os import geteuid
 from utils.utils import execute
 from utils.config import VERSION
 
-@onCommand("sh", help="sh <cmd>: 执行指令", version=VERSION)
+@onCommand("sh", help="sh <cmd>: 执行指令", allowAnonymous=True, version=VERSION)
 async def handler(args: Args, client: Client, msg: Message, ctx: Context):
     user = getuser()
     command = args.getAll()

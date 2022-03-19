@@ -3,7 +3,7 @@ from pyrogram import Client
 from pyrogram.types import Message
 from utils.config import getConfig, VERSION
 
-@onCommand("help", help="help: 查看菜单", version=VERSION)
+@onCommand("help", help="help: 查看菜单", allowAnonymous=True, version=VERSION)
 async def handler(arg: Args, client: Client, message: Message, ctx: Context):
     cmd = arg.get(0)
     if not cmd:
